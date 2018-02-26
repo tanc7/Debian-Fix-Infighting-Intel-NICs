@@ -1,5 +1,36 @@
 This is a fix I am rolling out to anyone who uses a Debian or Debian derivative and uses a Dell 7577 Series Laptop with a broken iwlwifi driver in it.
 
+In my laptop the faulty card is this one
+
+        *-pci:3
+             description: PCI bridge
+             product: Sunrise Point-H PCI Express Root Port #6
+             vendor: Intel Corporation
+             physical id: 1c.5
+             bus info: pci@0000:00:1c.5
+             version: f1
+             width: 32 bits
+             clock: 33MHz
+             capabilities: pci pciexpress msi pm normal_decode bus_master cap_list
+             configuration: driver=pcieport
+             resources: irq:125 memory:dd100000-dd1fffff
+           *-network
+                description: Wireless interface
+                product: Intel Corporation
+                vendor: Intel Corporation
+                physical id: 0
+                **bus info: pci@0000:3c:00.0**
+                **logical name: wlp60s0**
+                version: 78
+                serial: 5c:e7:0f:44:08:2d
+                width: 64 bits
+                clock: 33MHz
+                capabilities: pm msi pciexpress bus_master cap_list ethernet physical wireless
+                **configuration: broadcast=yes driver=iwlwifi driverversion=4.9.0-6-amd64 firmware=22.361476.0 ip=10.0.1.50 latency=0 link=yes multicast=yes wireless=IEEE 802.11**
+                resources: irq:131 memory:dd100000-dd101fff
+
+
+# How do confirm if you have a faulty card too
 
 Included is a example script of how to fix the infighting interfaces. Usually you will not have ANY warning that your interfaces are literally de-authing one another unless you run parprouted against any two network interfaces on your laptop.
 
@@ -53,3 +84,23 @@ if that failed I'd kill it and go
 wicd-curses`
 
 I also added more to clarify how I fixed my KVM Hypervisor's network. I combined parparouted with static routing. This means even if wireless got downed, or my tables got screwed, I still can maintain a network connection because I merged my wireless and ethernet cards together with a proxy arp protocol daemon (thats parprouted).
+
+# Four. Add it as a cronjob until someone rolls out a real fix
+
+Add these two to the top of the script
+`#!/bin/sh`
+`SHELL=/bin/bash`
+
+And add these to your crontab first. `crontab -e`
+
+`PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/etc/init.d"`
+`SHELL=/bin/bash`
+`initpath=/etc/init.d`
+`binpath=/usr/local/bin`
+
+Then `cp -r script.sh` to /usr/local/bin and go `crontab -e` again.
+
+Add this to the bottom of crontab,save and exit.
+
+`@reboot /bin/sh $binpath/script.sh`
+
