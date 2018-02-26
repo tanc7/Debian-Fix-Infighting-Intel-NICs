@@ -1,4 +1,23 @@
-This is a fix I am rolling out to anyone who uses a Debian or Debian derivative and uses a Dell 7577 Series Laptop with a broken iwlwifi driver in it.
+# This is a fix I am rolling out to anyone who uses a Debian or Debian derivative and uses a Dell 7577 Series Laptop with a broken iwlwifi driver in it.
+```
+Chang Tan
+changtan@listerunlimited.com
+Lister Unlimited Cybersecurity Solutions, LLC.
+```
+# Installation
+
+You can either play around and edit with my scripts or execute them (if the settings are YOUR NETWORK's which is not) AFTER you edit them.
+
+To make them executable,
+
+```
+git clone https://github.com/tanc7/Debian-Fix-Infighting-Intel-NICs
+cd Debian-Fix-Infighting-Intel-NICs
+chmod 777 *.sh
+./some-fix.sh
+```
+
+This forces a mandatory shutdown and restart network interfaces. And itll finally work, hopefully.
 
 In my laptop the faulty card is this one
 ```
