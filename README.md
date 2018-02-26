@@ -8,7 +8,8 @@ Included is a example script of how to fix the infighting interfaces. Usually yo
 
 If you see this:
 
-[img]
+![alt text](https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png "Logo Title Text 1")
+![Infighting Wireless and Ethernet Cards Deauthing One Another if you run parprouted on a suspected faulty device](https://github.com/tanc7/Debian-Fix-Infighting-Intel-NICs/blob/master/infightingifaces.png)
 
 Then they are fighting each other. Locking you out of internet access. They basically are trying to shut each other down and bring each other up. There will be NO indication that this is happening. Outside of parprouted. 
 
