@@ -1,7 +1,7 @@
 This is a fix I am rolling out to anyone who uses a Debian or Debian derivative and uses a Dell 7577 Series Laptop with a broken iwlwifi driver in it.
 
 In my laptop the faulty card is this one
-
+```
         *-pci:3
              description: PCI bridge
              product: Sunrise Point-H PCI Express Root Port #6
@@ -28,14 +28,14 @@ In my laptop the faulty card is this one
                 capabilities: pm msi pciexpress bus_master cap_list ethernet physical wireless
                 **configuration: broadcast=yes driver=iwlwifi driverversion=4.9.0-6-amd64 firmware=22.361476.0 ip=10.0.1.50 latency=0 link=yes multicast=yes wireless=IEEE 802.11**
                 resources: irq:131 memory:dd100000-dd101fff
-
+```
 
 # How do confirm if you have a faulty card too
 
 Included is a example script of how to fix the infighting interfaces. Usually you will not have ANY warning that your interfaces are literally de-authing one another unless you run parprouted against any two network interfaces on your laptop.
 
 
-`parprouted -d $ifaceone $ifacetwo`
+```parprouted -d $ifaceone $ifacetwo```
 
 If you see this:
 
@@ -51,56 +51,58 @@ To fix it, you have to write your own script using mine as a template.
 # One. Shutdown all Interfaces on bootup
 
 First kill all interfering services
-```killall wpa_supplicant wicd network-manager
-rm -rf /var/run/wpa_supplicant/*```
-
+```
+killall wpa_supplicant wicd network-manager
+rm -rf /var/run/wpa_supplicant/*
+```
 The NICs are located in /sys/class/net each folder is a interface
 Just 
-
-```cd /sys/class/net`
-`ls >> list-of-interfaces.txt```
-
+```
+cd /sys/class/net
+ls >> list-of-interfaces.txt
+```
 Then for each interface tell ifconfig to shut it down.
 
-`ifconfig $iface down`
+```ifconfig $iface down```
 
 # Two. Enable the NEEDED PHYSICAL interface after you boot up
 
 That means you only need ONE and no more than that. Are you gonna use ethernet? Or wifi? Pick one right now. Don't bring the other one up or the infighting starts again.
-
-```rfkill unblock all
-ifconfig $iface up```
-
+```
+rfkill unblock all
+ifconfig $iface up
+```
 
 # Three. Enable the NETWORK MANAGER for your interface
 
 Whatever that may be. I use wpa_supplicant and wicd. 
 
-`wpa_supplicant -i $iface -c $config`
+```wpa_supplicant -i $iface -c $config```
 
 if that failed I'd kill it and go
-
-```service wicd start
-wicd-curses```
-
+```
+service wicd start
+wicd-curses
+```
 I also added more to clarify how I fixed my KVM Hypervisor's network. I combined parparouted with static routing. This means even if wireless got downed, or my tables got screwed, I still can maintain a network connection because I merged my wireless and ethernet cards together with a proxy arp protocol daemon (thats parprouted).
 
 # Four. Add it as a cronjob until someone rolls out a real fix
 
 Add these two to the top of the script
-```#!/bin/sh`
-`SHELL=/bin/bash```
+```
+#!/bin/sh
+SHELL=/bin/bash
+```
+And add these to your crontab first. crontab -e
+```
+PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/etc/init.d"
+SHELL=/bin/bash
+initpath=/etc/init.d
+binpath=/usr/local/bin
+```
+Then ```cp -r script.sh``` to /usr/local/bin and go crontab -e again.
 
-And add these to your crontab first. `crontab -e`
+copy this to the bottom of crontab,save and exit and reboot.
 
-```PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/etc/init.d"`
-`SHELL=/bin/bash`
-`initpath=/etc/init.d`
-`binpath=/usr/local/bin```
-
-Then `cp -r script.sh` to /usr/local/bin and go `crontab -e` again.
-
-Add this to the bottom of crontab,save and exit.
-
-`@reboot /bin/sh $binpath/script.sh`
+```@reboot /bin/sh $binpath/script.sh```
 
