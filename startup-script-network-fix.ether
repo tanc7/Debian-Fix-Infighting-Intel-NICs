@@ -1,0 +1,48 @@
+#!/bin/sh
+SHELL=/bin/bash
+
+# Fix for Debian fighting interfaces bug
+# Chang Tan
+
+exteth=enx18d6c71f9677
+inteth=enp59s0
+
+# all nets must go down
+killall -9 wpa_supplicant
+rm -rf /var/run/wpa_supplicant/*
+killall NetworkManager
+killall wicd
+for iface in $(ls /sys/class/net)
+	do ifconfig $iface down
+	macchanger -b -r $iface
+	done
+echo 'Sleeping 2 seconds before bringing eerything up'
+sleep 2
+# bring each interface back up
+# careful. you need to choose between bringing ethernet or wireless up otherwise you get the interfaces fighting bug
+# let ENX ethernet card get the real IP
+# let internal ethernet card become subnet 172.16.84
+echo 'Adding ext ethernet card and bringing it up'
+ifconfig $exteth up && dhclient $exteth &
+echo 'Adding internal ethernet card and giving it subnet 172.16.84.0'
+ifconfig $inteth up && ifconfig $inteth 172.16.84.1 &
+# static NAT routing
+route add default gw 10.0.1.1
+route add -net 172.16.84.0 netmask 255.255.255.0 gw 10.0.1.1 dev $inteth metric 1
+echo 'PROXY ARPing both ethernet cards together'
+parprouted -d $inteth $exteth &
+#ifconfig wlp60s0 up && wpa_supplicant -i wlp60s0 -c /etc/wpa_supplicant/wpa_supplicant.conf &
+echo 'Bringing Hypervisor virbr0 up with subnet 192.168.122.0'
+ifconfig virbr0 up && ifconfig virbr0 192.168.122.1 &
+echo 'Proxy arping internal ethernet card with virtual bridge'
+parprouted -d $inteth virbr0 &
+echo 'DNS Check ping check'
+ping google.com
+sleep 2
+ping 8.8.8.8
+sleep 2
+
+echo 'Arp Alert scanning online'
+arpalert
+
+# use Proxy Arp Daemon

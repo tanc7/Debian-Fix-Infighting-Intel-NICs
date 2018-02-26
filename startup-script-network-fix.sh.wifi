@@ -1,0 +1,87 @@
+#!/bin/sh
+SHELL=/bin/bash
+
+# The fix for the Debian bug of infighting network interfaces on ARP protocol
+# Wireless Version
+# only allows the necwessary network interfaces to connect
+# shuts everything else off unless you need it
+
+# To run
+# su
+# cd to your script
+# mv script.sh fix.sh
+# /bin/sh fix.sh
+
+# written by Chang Tan
+# Lister Unlimited Cybersecurity Solutions, LLC.
+# changtan@listerunlimited.com
+
+# flush routing tables
+routef
+# all nets must go down
+killall -9 wpa_supplicant
+rm -rf /var/run/wpa_supplicant/*
+killall NetworkManager
+killall wicd
+airmon-ng check kill
+# take down every interface
+for iface in $(ls /sys/class/net)
+	do ifconfig $iface down
+	macchanger -b -r $iface &
+	done
+
+wpaconf='wpa_supplicant.conf'
+wpafold='/etc/wpa_supplicant'
+clear
+# only wireless interfaces are brought up
+cd /sys/class/net
+
+# bring not ethernet interfaces up
+# exclude wireguard as well
+for iface in $(eval ls | egrep -vi 'wg|en')
+	do ifconfig $iface up
+	done
+for wiface in $(eval ls | egrep -i 'wlx|wlp')
+	do clear;echo $wiface
+	cp -r $wpafold/$wpaconf $wpafold/$wpaconf_$wiface.conf
+	ifconfig $wiface up
+	rfkill unblock all
+	sleep 2
+	wpa_supplicant -i $wiface -c $wpafold/$wpaconf_$wiface.conf &
+	sleep 15;dhclient $wiface &
+	iwconfig $wiface &
+	done
+
+# only ethernet ifacaes stay down
+for etherface in $(eval ls | egrep -i 'enx|enp')
+	do ifconfig $etherface down &
+	done
+echo 'Sleeping 2 seconds before bringing eerything up'
+sleep 2
+
+clear
+
+
+# write static route on virtual interface for your Hypervisor
+echo 'Writing static route'
+
+# gives it subneyt 192.168.122.0
+ifconfig virbr0 up && ifconfig virbr0 192.168.122.1
+# turns it into a gateway, your virtual bridge
+route add gw 192.168.122.1 dev virbr0 metric 1
+# gives it the entire subnet and makes a static route
+route add -net 192.168.122.0 netmask 255.255.255.0 gw 192.168.122.1 dev virbr0 metric 1
+route -n
+# starts up virtualized interface
+virsh connect
+
+
+# proxy-arp wireless card to vm bridge
+# this is the second safety net. Just in case your initial routing tables fix didnt work, or it broke,
+# proxy ARPing will catch the mistake and actually make a ethernet card talk to a wifi card
+
+echo 'PROXY ARPING wlp59s0 and virbr0'
+parprouted -d wlp59s0 virbr0 &
+arpalert &
+# use Proxy Arp Daemon
+# virt-manager
