@@ -4,9 +4,14 @@ Chang Tan
 changtan@listerunlimited.com
 Lister Unlimited Cybersecurity Solutions, LLC.
 ```
+
+Lets be very clear. I am NOT Intel. I am NOT Dell. I am not part of Ubuntu or Debian. I do not represent them in any way. But I am very mad after realizing that my network drivers are faulty and I need to use wireless dongles, and thousands of lines python and bash scripts before I figured out what happened.
+
+Now I don't know whose ass am I supposed to kick. But consider trying this fix out first (follow my instructions to make a script that manually manages the interfaces one by one), and then go notify whoever dunnit wrong (seems to be one of the network card drivers) i'm gonna go kick his ass for wasting my time.
+
 # Installation
 
-You can either play around and edit with my scripts or execute them (if the settings are YOUR NETWORK's which is not) AFTER you edit them.
+You can either play around and edit with my scripts or execute them (if the settings are YOUR NETWORK's which is nsot) AFTER you edit them.
 
 To make them executable,
 
